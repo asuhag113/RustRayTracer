@@ -143,10 +143,28 @@ impl ops::Mul<f32> for Vec3 {
     }
 }
 #[test]
-fn test_f32_mul() {
+fn test_f32_rhs_mul() {
     let a = Vec3::new(0.0, 1.0, 2.0);
     let b = 2.0;
     let c = a * b;
+    assert_eq!(c.x(), 0.0);
+    assert_eq!(c.y(), 2.0);
+    assert_eq!(c.z(), 4.0);
+}
+
+impl ops::Mul<Vec3> for f32 {
+    type Output = Vec3;
+
+    fn mul(self, rhs: Vec3) -> Self::Output {
+        return Vec3::new(self * rhs.x(), self * rhs.y(), self * rhs.z());
+    }
+}
+
+#[test]
+fn test_f32_lhs_mul() {
+    let a = Vec3::new(0.0, 1.0, 2.0);
+    let b = 2.0;
+    let c = b * a;
     assert_eq!(c.x(), 0.0);
     assert_eq!(c.y(), 2.0);
     assert_eq!(c.z(), 4.0);
