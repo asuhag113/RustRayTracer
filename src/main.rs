@@ -1,5 +1,7 @@
 use std::{ io::{ Error, stdin, Write }, path::Path, fs::{ File, create_dir_all }, str::FromStr };
 
+use raytracer::color::Color;
+
 /// returns a parsed user input that matches the type of the variable that is being assigned the input value
 ///
 /// # Parameters
@@ -29,7 +31,7 @@ fn get_input<U: FromStr>(prompt: &str, retry: &str, validator: Option<fn(&str) -
 /// creates a file at the given filepath and writes the proper metadata for an image in the PPM format
 fn write_to_file(
     filepath: &str,
-    rgb_triplets: &Vec<Vec<i32>>,
+    rgb_triplets: &Vec<[i32; 3]>,
     image_width: &usize,
     image_height: &usize
 ) -> Result<(), Error> {
@@ -48,22 +50,21 @@ fn write_to_file(
 
 /// calculates the rgb values to be written in the PPM file
 fn render_rgb_triplets(
-    rgb_triplets: &mut Vec<Vec<i32>>,
+    rgb_triplets: &mut Vec<[i32; 3]>,
     image_width: &usize,
     image_height: &usize
 ) {
     println!("Beginning render for {}x{}", image_width, image_height);
     let mut idx = 0;
-    for i in 0..*image_width {
-        for j in 0..*image_height {
-            let r: f32 = (j as f32) / ((image_height - 1) as f32);
-            let g: f32 = (i as f32) / ((image_width - 1) as f32);
-            let b: f32 = 0.0;
-
-            let ir = (255.999 * r) as i32;
-            let ig = (255.999 * g) as i32;
-            let ib = (255.999 * b) as i32;
-            rgb_triplets[idx] = vec![ir, ig, ib];
+    for j in 0..*image_width {
+        for i in 0..*image_height {
+            let pixel_color = Color::new(
+                (i as f32) / ((image_width - 1) as f32),
+                (j as f32) / ((image_height - 1) as f32),
+                0.0
+            );
+            let rgb_triplet = pixel_color.as_i32();
+            rgb_triplets[idx] = rgb_triplet;
             idx += 1;
         }
     }
@@ -104,7 +105,7 @@ fn main() -> Result<(), Error> {
     };
 
     // create a matrix to store our rgb triplets
-    let mut rgb_triplets: Vec<Vec<i32>> = vec![vec!(0; 3); image_height * image_width];
+    let mut rgb_triplets: Vec<[i32; 3]> = vec![[0; 3]; image_height * image_width];
     render_rgb_triplets(&mut rgb_triplets, &image_width, &image_height);
     write_to_file(&output_path, &rgb_triplets, &image_width, &image_height).expect(
         "Failed writing to file"
