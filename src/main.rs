@@ -5,7 +5,7 @@ use std::{
     str::FromStr,
 };
 
-use raytracer::{ color::Color, ray::Ray, point3d::Point3D, vec3::UnitVec, camera::Camera };
+use raytracer::{ color::Color, ray::Ray, point3d::Point3D, vec3::{ UnitVec, Dot }, camera::Camera };
 
 /// returns a parsed user input that matches the type of the variable that is being assigned the input value
 ///
@@ -92,7 +92,21 @@ fn render_rgb_triplets(
     println!("\nFinished render");
 }
 
+fn did_hit_sphere(center: &Point3D, radius: f32, ray: &Ray) -> bool {
+    // formula for ray-sphere intersection
+    let oc = ray.origin() - *center;
+    let a = ray.direction().dot(ray.direction());
+    let b = 2.0 * oc.dot(ray.direction());
+    let c = oc.dot(oc) - radius * radius;
+    let discriminant = b * b - 4.0 * a * c;
+    return discriminant >= 0.0;
+}
+
 fn ray_color(ray: &Ray) -> Color {
+    // add a sphere at (0,0,-1) with radius 0.5
+    if did_hit_sphere(&Point3D::new(0.0, 0.0, -1.0), 0.5, ray) {
+        return Color::new(1.0, 0.0, 0.0);
+    }
     let unit_direction = ray.direction().unit_vec();
     // lerp between blue and white: (1−𝑎) * startValue + 𝑎 * endValue
     let a = 0.5 * (unit_direction.y() + 1.0);
