@@ -1,6 +1,11 @@
-use std::{ io::{ Error, stdin, Write }, path::Path, fs::{ File, create_dir_all }, str::FromStr };
+use std::{
+    io::{ Error, stdin, Write, self },
+    path::Path,
+    fs::{ File, create_dir_all },
+    str::FromStr,
+};
 
-use raytracer::color::Color;
+use raytracer::{ color::Color, ray::Ray, point3d::Point3D, vec3::UnitVec, camera::Camera };
 
 /// returns a parsed user input that matches the type of the variable that is being assigned the input value
 ///
@@ -54,20 +59,44 @@ fn render_rgb_triplets(
     image_width: &usize,
     image_height: &usize
 ) {
+    let camera = Camera::new(
+        Point3D::new(0.0, 0.0, 0.0), // +x is right, +y is up, -z is toward scene
+        2.0 * ((*image_width as f32) / (*image_height as f32)), // use the calculated image height and width instead of the aspect ratio so the viewport proportions exactly match the image proportions
+        2.0, // for now, we arbitarily set the viewport height to 2.0
+        1.0
+    );
+    // horizontal delta vectors from pixel to pixel
+    let pixel_delta_u = camera.viewport_u() / (*image_width as f32);
+    // vertical delta vectors from pixel to pixel
+    let pixel_delta_v = camera.viewport_v() / (*image_height as f32);
+
+    // // Calculate the location of the upper left pixel
+    let pixel00_loc = camera.viewport_upper_left() + 0.5 * (pixel_delta_u + pixel_delta_v);
     println!("Beginning render for {}x{}", image_width, image_height);
     let mut idx = 0;
-    for j in 0..*image_width {
-        for i in 0..*image_height {
-            let pixel_color = Color::new(
-                (i as f32) / ((image_width - 1) as f32),
-                (j as f32) / ((image_height - 1) as f32),
-                0.0
-            );
+    for j in 0..*image_height {
+        print!("Scanlines remaining: {}\r", image_height - j);
+        io::stdout().flush().unwrap();
+        for i in 0..*image_width {
+            let pixel_center =
+                pixel00_loc + (i as f32) * pixel_delta_u + (j as f32) * pixel_delta_v;
+            let ray_direction = pixel_center - camera.center();
+            let ray = Ray::new(camera.center(), ray_direction);
+
+            let pixel_color = ray_color(&ray);
             let rgb_triplet = pixel_color.as_i32();
             rgb_triplets[idx] = rgb_triplet;
             idx += 1;
         }
     }
+    println!("\nFinished render");
+}
+
+fn ray_color(ray: &Ray) -> Color {
+    let unit_direction = ray.direction().unit_vec();
+    // lerp between blue and white: (1−𝑎) * startValue + 𝑎 * endValue
+    let a = 0.5 * (unit_direction.y() + 1.0);
+    return (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0);
 }
 
 fn main() -> Result<(), Error> {
@@ -85,11 +114,16 @@ fn main() -> Result<(), Error> {
         "Please enter a valid number",
         None
     );
-    let image_height: usize = get_input(
-        "Enter a height for the output image:",
-        "Please enter a valid number",
-        None
-    );
+    // for now, the ideal aspect ratio is 16:9
+    // we try for a best-effort approximation by using an integer-based ratio of image width over image height
+    let aspect_ratio: f32 = 16.0 / 9.0;
+    // calculate the image height based on the provided width to ensure we match the aspect ratio, ensure that the height is at least 1
+    let image_height = (if (image_width as f32) / aspect_ratio < 1.0 {
+        1.0
+    } else {
+        (image_width as f32) / aspect_ratio
+    }) as usize;
+
     let image_filename = String::from("image.ppm");
 
     // check if the path provided exists, if not, create the proper directories needed
