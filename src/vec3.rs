@@ -219,7 +219,7 @@ fn test_f32_div_assign() {
     assert_eq!(a.z(), 0.0);
 }
 
-trait Dot {
+pub trait Dot {
     fn dot(self, rhs: Vec3) -> f32;
 }
 impl Dot for Vec3 {
@@ -235,7 +235,7 @@ fn test_dot() {
     assert_eq!(c, 10.0)
 }
 
-trait Cross {
+pub trait Cross {
     fn cross(self, rhs: Vec3) -> Vec3;
 }
 impl Cross for Vec3 {
@@ -257,7 +257,7 @@ fn test_cross() {
     assert_eq!(c.z(), -4.0)
 }
 
-trait UnitVec {
+pub trait UnitVec {
     fn unit_vec(self) -> Vec3;
 }
 impl UnitVec for Vec3 {
