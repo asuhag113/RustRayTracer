@@ -94,6 +94,8 @@ fn render_rgb_triplets(
 
 fn did_hit_sphere(center: &Point3D, radius: f32, ray: &Ray) -> bool {
     // formula for ray-sphere intersection
+    // note, for now there is an intentional bug where the camera+scene cannot tell if the sphere is
+    // in front of the camera (-z) or behind the camera (+z), so a sphere with z +1 and -1 will look the same
     let oc = ray.origin() - *center;
     let a = ray.direction().dot(ray.direction());
     let b = 2.0 * oc.dot(ray.direction());
