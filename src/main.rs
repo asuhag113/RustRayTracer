@@ -5,7 +5,13 @@ use std::{
     str::FromStr,
 };
 
-use raytracer::{ color::Color, ray::Ray, point3d::Point3D, vec3::{ UnitVec, Dot }, camera::Camera };
+use raytracer::{
+    color::Color,
+    ray::Ray,
+    point3d::Point3D,
+    vec3::{ UnitVec, Dot, Vec3 },
+    camera::Camera,
+};
 
 /// returns a parsed user input that matches the type of the variable that is being assigned the input value
 ///
@@ -92,7 +98,7 @@ fn render_rgb_triplets(
     println!("\nFinished render");
 }
 
-fn did_hit_sphere(center: &Point3D, radius: f32, ray: &Ray) -> bool {
+fn hit_sphere(center: &Point3D, radius: f32, ray: &Ray) -> f32 {
     // formula for ray-sphere intersection
     // note, for now there is an intentional bug where the camera+scene cannot tell if the sphere is
     // in front of the camera (-z) or behind the camera (+z), so a sphere with z +1 and -1 will look the same
@@ -101,13 +107,17 @@ fn did_hit_sphere(center: &Point3D, radius: f32, ray: &Ray) -> bool {
     let b = 2.0 * oc.dot(ray.direction());
     let c = oc.dot(oc) - radius * radius;
     let discriminant = b * b - 4.0 * a * c;
-    return discriminant >= 0.0;
+    return if discriminant < 0.0 { -1.0 } else { (-b - f32::sqrt(discriminant)) / (2.0 * a) };
 }
 
 fn ray_color(ray: &Ray) -> Color {
     // add a sphere at (0,0,-1) with radius 0.5
-    if did_hit_sphere(&Point3D::new(0.0, 0.0, -1.0), 0.5, ray) {
-        return Color::new(1.0, 0.0, 0.0);
+    let t = hit_sphere(&Point3D::new(0.0, 0.0, -1.0), 0.5, ray);
+    // right now,we assume the closest hit point is the one we want for visualizing normals
+    if t > 0.0 {
+        let n = (ray.at(t) - Vec3::new(0.0, 0.0, -1.0)).unit_vec();
+        // n is a value between 0.0 and 1.0, and we map x, y, and z to red, green, and blue respectively
+        return 0.5 * Color::new(n.x() + 1.0, n.y() + 1.0, n.z() + 1.0);
     }
     let unit_direction = ray.direction().unit_vec();
     // lerp between blue and white: (1−𝑎) * startValue + 𝑎 * endValue
