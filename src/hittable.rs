@@ -1,20 +1,35 @@
-use crate::{ ray::Ray, point3d::Point3D, vec3::{ Vec3, Dot }, interval::Interval };
+use std::rc::Rc;
 
-#[derive(Debug)]
+use crate::{
+    ray::Ray,
+    point3d::Point3D,
+    vec3::{ Vec3, Dot },
+    interval::Interval,
+    material::Material,
+};
+
 pub struct HitRecord {
     pub p: Point3D,
     pub normal: Vec3,
     pub t: f32,
     pub front_face: bool,
+    pub material: Rc<dyn Material>,
 }
 
 impl HitRecord {
-    pub fn new(p: Point3D, normal: Point3D, t: f32, front_face: bool) -> HitRecord {
+    pub fn new(
+        p: Point3D,
+        normal: Point3D,
+        t: f32,
+        front_face: bool,
+        material: Rc<dyn Material>
+    ) -> HitRecord {
         HitRecord {
             p,
             normal,
             t,
             front_face,
+            material,
         }
     }
     // our normals always point against the ray, so we must store which side of the surface the ray is on
