@@ -8,6 +8,14 @@ pub struct HitRecord {
 }
 
 impl HitRecord {
+    pub fn new(p: Point3D, normal: Point3D, t: f32, front_face: bool) -> HitRecord {
+        HitRecord {
+            p,
+            normal,
+            t,
+            front_face,
+        }
+    }
     // our normals always point against the ray, so we must store which side of the surface the ray is on
     // an alternative to this would be to determine the side of the surface during coloring
     pub fn set_face_normal(&mut self, ray: &Ray, outward_normal: &Vec3) {
@@ -20,5 +28,5 @@ impl HitRecord {
 // this trait is intended to be implemented for any "object" that a ray might hit
 pub trait Hittable {
     // a ray only "counts" if it is within tmin and tmax
-    fn hit(&self, ray: &Ray, ray_tmin: f32, ray_tmax: f32, hit_record: &mut HitRecord) -> bool;
+    fn hit(&self, ray: &Ray, ray_tmin: f32, ray_tmax: f32) -> Option<HitRecord>;
 }
