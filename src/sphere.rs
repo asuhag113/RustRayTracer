@@ -1,4 +1,10 @@
-use crate::{ point3d::Point3D, hittable::{ Hittable, HitRecord }, vec3::Dot };
+use crate::{
+    point3d::Point3D,
+    hittable::{ Hittable, HitRecord },
+    vec3::Dot,
+    interval::Interval,
+    ray::Ray,
+};
 
 pub struct Sphere {
     center: Point3D,
@@ -12,7 +18,7 @@ impl Sphere {
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, ray: &crate::ray::Ray, ray_tmin: f32, ray_tmax: f32) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, ray_t: &Interval) -> Option<HitRecord> {
         // formula for ray-sphere intersection
         // note, for now there is an intentional bug where the camera+scene cannot tell if the sphere is
         // in front of the camera (-z) or behind the camera (+z), so a sphere with z +1 and -1 will look the same
@@ -28,9 +34,9 @@ impl Hittable for Sphere {
 
         // Find the nearest root that lies in the acceptable range
         let mut root = (-half_b - sqrtd) / a;
-        if root <= ray_tmin || ray_tmax <= root {
+        if !ray_t.surrounds(root) {
             root = (-half_b + sqrtd) / a;
-            if root <= ray_tmin || ray_tmax <= root {
+            if !ray_t.surrounds(root) {
                 return None;
             }
         }

@@ -1,4 +1,4 @@
-use crate::{ ray::Ray, point3d::Point3D, vec3::{ Vec3, Dot } };
+use crate::{ ray::Ray, point3d::Point3D, vec3::{ Vec3, Dot }, interval::Interval };
 
 pub struct HitRecord {
     pub p: Point3D,
@@ -28,5 +28,5 @@ impl HitRecord {
 // this trait is intended to be implemented for any "object" that a ray might hit
 pub trait Hittable {
     // a ray only "counts" if it is within tmin and tmax
-    fn hit(&self, ray: &Ray, ray_tmin: f32, ray_tmax: f32) -> Option<HitRecord>;
+    fn hit(&self, ray: &Ray, ray_t: &Interval) -> Option<HitRecord>;
 }

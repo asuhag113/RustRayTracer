@@ -15,6 +15,7 @@ use raytracer::{
     hittable_list::HittableList,
     sphere::Sphere,
     hittable::Hittable,
+    interval::Interval,
 };
 
 /// returns a parsed user input that matches the type of the variable that is being assigned the input value
@@ -109,7 +110,7 @@ fn render_rgb_triplets(
 }
 
 fn ray_color(ray: &Ray, world: &HittableList) -> Color {
-    if let Some(hit) = world.hit(ray, 0.0, f32::INFINITY) {
+    if let Some(hit) = world.hit(ray, &Interval::new(0.0, f32::INFINITY)) {
         return 0.5 * Color::new(1.0 + hit.normal.x(), 1.0 + hit.normal.y(), 1.0 + hit.normal.z());
     }
     let unit_direction = ray.direction().unit_vec();

@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use crate::{ hittable::{ Hittable, HitRecord }, ray::Ray };
+use crate::{ hittable::{ Hittable, HitRecord }, ray::Ray, interval::Interval };
 
 pub struct HittableList {
     // Rc is similar to shared_ptr in c++
@@ -21,11 +21,11 @@ impl HittableList {
 }
 
 impl Hittable for HittableList {
-    fn hit(&self, ray: &Ray, ray_tmin: f32, ray_tmax: f32) -> Option<HitRecord> {
-        let mut closest_so_far = ray_tmax;
+    fn hit(&self, ray: &Ray, ray_t: &Interval) -> Option<HitRecord> {
+        let mut closest_so_far = ray_t.min;
         let mut hit_record = None;
         for object in &self.objects {
-            if let Some(hit) = object.hit(ray, ray_tmin, closest_so_far) {
+            if let Some(hit) = object.hit(ray, &Interval::new(ray_t.min, closest_so_far)) {
                 closest_so_far = hit.t;
                 hit_record = Some(hit);
             }
