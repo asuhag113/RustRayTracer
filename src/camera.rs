@@ -1,5 +1,7 @@
 use std::{ io::{ self, Write }, fs::File };
 
+use rand::random;
+
 use crate::{
     point3d::Point3D,
     hittable_list::HittableList,
@@ -17,10 +19,11 @@ pub struct Camera {
     pixel00_loc: Point3D,
     pixel_delta_u: Vec3,
     pixel_delta_v: Vec3,
+    samples_per_pixel: i32,
 }
 
 impl Camera {
-    pub fn new(aspect_ratio: f32, image_width: i32) -> Camera {
+    pub fn new(aspect_ratio: f32, image_width: i32, samples_per_pixel: i32) -> Camera {
         // Calculate the image height based on the provided width to ensure we match the aspect ratio, ensure that the height is at least 1
         let image_height = if (image_width as f32) / aspect_ratio < 1.0 {
             1
@@ -56,6 +59,7 @@ impl Camera {
             pixel00_loc,
             pixel_delta_u,
             pixel_delta_v,
+            samples_per_pixel,
         };
     }
 
@@ -69,21 +73,46 @@ impl Camera {
             print!("Scanlines remaining: {}\r", self.image_height - j);
             io::stdout().flush().unwrap();
             for i in 0..self.image_width {
-                let pixel_center =
-                    self.pixel00_loc +
-                    (i as f32) * self.pixel_delta_u +
-                    (j as f32) * self.pixel_delta_v;
-                let ray_direction = pixel_center - self.center;
-                let ray = Ray::new(self.center, ray_direction);
+                let mut pixel_color = Color::new(0.0, 0.0, 0.0);
+                for _ in 0..self.samples_per_pixel {
+                    let ray = self.get_ray(i, j);
+                    pixel_color += self.ray_color(&ray, world);
+                }
+                let scale = 1.0 / (self.samples_per_pixel as f32);
+                let r = pixel_color.x() * scale;
+                let g = pixel_color.y() * scale;
+                let b = pixel_color.z() * scale;
 
-                let pixel_color = self.ray_color(&ray, world);
-                let rgb_triplet = pixel_color.as_i32();
+                let intensity = Interval::new(0.0, 0.999);
+
                 file.write(
-                    format!("{} {} {}\n", rgb_triplet[0], rgb_triplet[1], rgb_triplet[2]).as_bytes()
+                    format!(
+                        "{} {} {}\n",
+                        (256.0 * intensity.clamp(r)) as i32,
+                        (256.0 * intensity.clamp(g)) as i32,
+                        (256.0 * intensity.clamp(b)) as i32
+                    ).as_bytes()
                 ).expect("Failed writing to file");
             }
         }
         println!("\nFinished render");
+    }
+
+    fn get_ray(&self, i: i32, j: i32) -> Ray {
+        let pixel_center =
+            self.pixel00_loc + (i as f32) * self.pixel_delta_u + (j as f32) * self.pixel_delta_v;
+        let pixel_sample = pixel_center + self.pixel_sample_square();
+
+        let ray_direction = pixel_sample - self.center;
+
+        return Ray::new(self.center, ray_direction);
+    }
+
+    // returns a random point in the square surrounding a pixel at the origin
+    fn pixel_sample_square(&self) -> Vec3 {
+        let px = -0.5 + random::<f32>();
+        let py = -0.5 + random::<f32>();
+        return px * self.pixel_delta_u + py * self.pixel_delta_v;
     }
 
     fn ray_color(&self, ray: &Ray, world: &HittableList) -> Color {
