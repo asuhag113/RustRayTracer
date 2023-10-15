@@ -1,6 +1,7 @@
 use std::ops;
 use crate::vec3::Vec3;
 
+#[derive(Clone, Copy)]
 pub struct Color(Vec3);
 
 impl Color {
@@ -27,6 +28,23 @@ impl ops::Deref for Color {
     fn deref(&self) -> &Self::Target {
         &self.0
     }
+}
+
+impl ops::Mul<Color> for Color {
+    type Output = Color;
+
+    fn mul(self, rhs: Color) -> Self::Output {
+        return Color::new(self.x() * rhs.x(), self.y() * rhs.y(), self.z() * rhs.z());
+    }
+}
+#[test]
+fn test_color_mul() {
+    let a = Color::new(0.0, 1.0, 2.0);
+    let b = Color::new(1.0, 1.0, 1.0);
+    let c = a * b;
+    assert_eq!(c.x(), 0.0);
+    assert_eq!(c.y(), 1.0);
+    assert_eq!(c.z(), 2.0);
 }
 
 impl ops::Mul<f32> for Color {
