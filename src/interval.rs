@@ -13,6 +13,15 @@ impl Interval {
     pub fn surrounds(&self, x: f32) -> bool {
         return self.min < x && x < self.max;
     }
+    pub fn clamp(&self, x: f32) -> f32 {
+        if x < self.min {
+            return self.min;
+        }
+        if x > self.max {
+            return self.max;
+        }
+        return x;
+    }
 }
 
 pub const EMPTY: Interval = Interval { min: f32::INFINITY, max: f32::NEG_INFINITY };
