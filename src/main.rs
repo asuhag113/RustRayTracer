@@ -3,14 +3,18 @@ use std::{
     path::Path,
     fs::{ File, create_dir_all },
     str::FromStr,
+    rc::Rc,
 };
 
 use raytracer::{
     color::Color,
     ray::Ray,
     point3d::Point3D,
-    vec3::{ UnitVec, Dot, Vec3 },
+    vec3::UnitVec,
     camera::Camera,
+    hittable_list::HittableList,
+    sphere::Sphere,
+    hittable::Hittable,
 };
 
 /// returns a parsed user input that matches the type of the variable that is being assigned the input value
@@ -78,6 +82,12 @@ fn render_rgb_triplets(
 
     // // Calculate the location of the upper left pixel
     let pixel00_loc = camera.viewport_upper_left() + 0.5 * (pixel_delta_u + pixel_delta_v);
+
+    // create a list of hittable objects in our scene
+    let mut world = HittableList::new();
+    world.add(Rc::new(Sphere::new(Point3D::new(0.0, 0.0, -1.0), 0.5)));
+    world.add(Rc::new(Sphere::new(Point3D::new(0.0, -100.5, -1.0), 100.0)));
+
     println!("Beginning render for {}x{}", image_width, image_height);
     let mut idx = 0;
     for j in 0..*image_height {
@@ -89,7 +99,7 @@ fn render_rgb_triplets(
             let ray_direction = pixel_center - camera.center();
             let ray = Ray::new(camera.center(), ray_direction);
 
-            let pixel_color = ray_color(&ray);
+            let pixel_color = ray_color(&ray, &world);
             let rgb_triplet = pixel_color.as_i32();
             rgb_triplets[idx] = rgb_triplet;
             idx += 1;
@@ -98,26 +108,9 @@ fn render_rgb_triplets(
     println!("\nFinished render");
 }
 
-fn hit_sphere(center: &Point3D, radius: f32, ray: &Ray) -> f32 {
-    // formula for ray-sphere intersection
-    // note, for now there is an intentional bug where the camera+scene cannot tell if the sphere is
-    // in front of the camera (-z) or behind the camera (+z), so a sphere with z +1 and -1 will look the same
-    let oc = ray.origin() - *center;
-    let a = ray.direction().length_squared();
-    let half_b = oc.dot(ray.direction());
-    let c = oc.length_squared() - radius * radius;
-    let discriminant = half_b * half_b - a * c;
-    return if discriminant < 0.0 { -1.0 } else { (-half_b - f32::sqrt(discriminant)) / a };
-}
-
-fn ray_color(ray: &Ray) -> Color {
-    // add a sphere at (0,0,-1) with radius 0.5
-    let t = hit_sphere(&Point3D::new(0.0, 0.0, -1.0), 0.5, ray);
-    // right now,we assume the closest hit point is the one we want for visualizing normals
-    if t > 0.0 {
-        let n = (ray.at(t) - Vec3::new(0.0, 0.0, -1.0)).unit_vec();
-        // n is a value between 0.0 and 1.0, and we map x, y, and z to red, green, and blue respectively
-        return 0.5 * Color::new(n.x() + 1.0, n.y() + 1.0, n.z() + 1.0);
+fn ray_color(ray: &Ray, world: &HittableList) -> Color {
+    if let Some(hit) = world.hit(ray, 0.0, f32::INFINITY) {
+        return 0.5 * Color::new(1.0 + hit.normal.x(), 1.0 + hit.normal.y(), 1.0 + hit.normal.z());
     }
     let unit_direction = ray.direction().unit_vec();
     // lerp between blue and white: (1−𝑎) * startValue + 𝑎 * endValue
