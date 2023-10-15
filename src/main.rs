@@ -7,6 +7,7 @@ use raytracer::{
     sphere::Sphere,
     material::{ Lambertian, Metal, Dielectric },
     color::Color,
+    vec3::Vec3,
 };
 
 fn main() -> Result<(), Error> {
@@ -28,7 +29,17 @@ fn main() -> Result<(), Error> {
     world.add(Rc::new(Sphere::new(Point3D::new(-1.0, 0.0, -1.0), -0.4, material_left.clone())));
     world.add(Rc::new(Sphere::new(Point3D::new(1.0, 0.0, -1.0), 0.5, material_right.clone())));
 
-    let camera = Camera::new(16.0 / 9.0, 400, 100, 50, 90.0);
+    let camera = Camera::new(
+        16.0 / 9.0,
+        400,
+        100,
+        50,
+        90.0,
+        Point3D::new(-2.0, 2.0, 1.0),
+        Point3D::new(0.0, 0.0, -1.0),
+        // camera-relative "up" direction, allowing for rotation
+        Vec3::new(0.0, 1.0, 0.0)
+    );
 
     camera.render(&world);
 
