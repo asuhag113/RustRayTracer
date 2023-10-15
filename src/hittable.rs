@@ -1,5 +1,6 @@
 use crate::{ ray::Ray, point3d::Point3D, vec3::{ Vec3, Dot }, interval::Interval };
 
+#[derive(Debug)]
 pub struct HitRecord {
     pub p: Point3D,
     pub normal: Vec3,
