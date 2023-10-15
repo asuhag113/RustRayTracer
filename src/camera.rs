@@ -28,7 +28,8 @@ impl Camera {
         aspect_ratio: f32,
         image_width: i32,
         samples_per_pixel: i32,
-        max_depth: i32
+        max_depth: i32,
+        vfov: f32
     ) -> Camera {
         // Calculate the image height based on the provided width to ensure we match the aspect ratio, ensure that the height is at least 1
         let image_height = if (image_width as f32) / aspect_ratio < 1.0 {
@@ -41,7 +42,9 @@ impl Camera {
 
         // Determine viewport dimensions
         let focal_length = 1.0;
-        let viewport_height = 2.0;
+        let theta = f32::to_radians(vfov);
+        let h = f32::tan(theta / 2.0);
+        let viewport_height = 2.0 * h * focal_length;
         let viewport_width =
             viewport_height * (((image_width as f32) / (image_height as f32)) as f32);
 
