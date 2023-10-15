@@ -86,9 +86,11 @@ impl Camera {
                     pixel_color += self.ray_color(&ray, self.max_depth, world);
                 }
                 let scale = 1.0 / (self.samples_per_pixel as f32);
-                let r = pixel_color.x() * scale;
-                let g = pixel_color.y() * scale;
-                let b = pixel_color.z() * scale;
+                // images are generally stored in gamma space, so here we convert our linear values into the gamma space
+                // for more accurate color intensity when viewing the image in image editors
+                let r = Color::linear_to_gamma(pixel_color.x() * scale);
+                let g = Color::linear_to_gamma(pixel_color.y() * scale);
+                let b = Color::linear_to_gamma(pixel_color.z() * scale);
 
                 let intensity = Interval::new(0.0, 0.999);
 

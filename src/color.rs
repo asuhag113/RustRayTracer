@@ -14,6 +14,9 @@ impl Color {
             (255.999 * self.z()) as i32,
         ];
     }
+    pub fn linear_to_gamma(lc: f32) -> f32 {
+        return f32::sqrt(lc);
+    }
 }
 
 // Deref defines how this wrapper type should behave when accessing the underlying value
