@@ -51,6 +51,13 @@ impl Vec3 {
         let on_unit_sphere = Vec3::random_unit_vector();
         return if on_unit_sphere.dot(*normal) > 0.0 { on_unit_sphere } else { -on_unit_sphere };
     }
+    pub fn near_zero(&self) -> bool {
+        let s = 1e-8;
+        return f32::abs(self.x) < s && f32::abs(self.y) < s && f32::abs(self.z) < s;
+    }
+    pub fn reflect(v: Vec3, n: Vec3) -> Vec3 {
+        return v - 2.0 * v.dot(n) * n;
+    }
     pub fn print(&self) {
         print!("{} {} {}", self.x, self.y, self.x)
     }

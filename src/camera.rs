@@ -131,8 +131,10 @@ impl Camera {
         }
         // Ignore hits that are very close to the calculated intersection point to prevent "shadow acne" from floating point rounding errors
         if let Some(hit) = world.hit(ray, &Interval::new(0.001, f32::INFINITY)) {
-            let direction = hit.normal + Vec3::random_unit_vector();
-            return 0.5 * self.ray_color(&Ray::new(hit.p, direction), depth - 1, world);
+            if let Some((scattered, attenuation)) = hit.material.scatter(ray, &hit) {
+                return attenuation * self.ray_color(&scattered, depth - 1, world);
+            }
+            return Color::new(0.0, 0.0, 0.0);
         }
         let unit_direction = ray.direction().unit_vec();
         // lerp between blue and white: (1−𝑎) * startValue + 𝑎 * endValue
