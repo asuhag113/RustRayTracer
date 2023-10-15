@@ -20,10 +20,16 @@ pub struct Camera {
     pixel_delta_u: Vec3,
     pixel_delta_v: Vec3,
     samples_per_pixel: i32,
+    max_depth: i32,
 }
 
 impl Camera {
-    pub fn new(aspect_ratio: f32, image_width: i32, samples_per_pixel: i32) -> Camera {
+    pub fn new(
+        aspect_ratio: f32,
+        image_width: i32,
+        samples_per_pixel: i32,
+        max_depth: i32
+    ) -> Camera {
         // Calculate the image height based on the provided width to ensure we match the aspect ratio, ensure that the height is at least 1
         let image_height = if (image_width as f32) / aspect_ratio < 1.0 {
             1
@@ -60,6 +66,7 @@ impl Camera {
             pixel_delta_u,
             pixel_delta_v,
             samples_per_pixel,
+            max_depth,
         };
     }
 
@@ -76,7 +83,7 @@ impl Camera {
                 let mut pixel_color = Color::new(0.0, 0.0, 0.0);
                 for _ in 0..self.samples_per_pixel {
                     let ray = self.get_ray(i, j);
-                    pixel_color += self.ray_color(&ray, world);
+                    pixel_color += self.ray_color(&ray, self.max_depth, world);
                 }
                 let scale = 1.0 / (self.samples_per_pixel as f32);
                 let r = pixel_color.x() * scale;
@@ -115,9 +122,15 @@ impl Camera {
         return px * self.pixel_delta_u + py * self.pixel_delta_v;
     }
 
-    fn ray_color(&self, ray: &Ray, world: &HittableList) -> Color {
-        if let Some(hit) = world.hit(ray, &Interval::new(0.0, f32::INFINITY)) {
-            return 0.5 * Color::new(1.0 + hit.normal.x(), 1.0 + hit.normal.y(), 1.0 + hit.normal.z());
+    fn ray_color(&self, ray: &Ray, depth: i32, world: &HittableList) -> Color {
+        // If we've exceeded the ray bounce limit, no more light is gathered.
+        if depth <= 0 {
+            return Color::new(0.0, 0.0, 0.0);
+        }
+        // Ignore hits that are very close to the calculated intersection point to prevent "shadow acne" from floating point rounding errors
+        if let Some(hit) = world.hit(ray, &Interval::new(0.001, f32::INFINITY)) {
+            let direction = Vec3::random_on_hemipshere(&hit.normal);
+            return 0.5 * self.ray_color(&Ray::new(hit.p, direction), depth - 1, world);
         }
         let unit_direction = ray.direction().unit_vec();
         // lerp between blue and white: (1−𝑎) * startValue + 𝑎 * endValue
