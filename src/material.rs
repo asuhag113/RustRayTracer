@@ -1,4 +1,4 @@
-use crate::{ ray::Ray, hittable::HitRecord, color::Color, vec3::{ Vec3, UnitVec } };
+use crate::{ ray::Ray, hittable::HitRecord, color::Color, vec3::{ Vec3, UnitVec, Dot } };
 
 // This is intended to be implemented in any struct that describes a material and scatters rays
 pub trait Material {
@@ -36,19 +36,27 @@ impl Material for Lambertian {
 
 pub struct Metal {
     pub albedo: Color,
+    pub fuzziness: f32,
 }
 
 impl Metal {
-    pub fn new(albedo: Color) -> Metal {
-        Metal { albedo }
+    pub fn new(albedo: Color, fuzziness: f32) -> Metal {
+        Metal { albedo, fuzziness }
     }
 }
 
 impl Material for Metal {
     fn scatter(&self, ray_in: &Ray, hit_rec: &HitRecord) -> Option<(Ray, Color)> {
         let reflected = Vec3::reflect(ray_in.direction().unit_vec(), hit_rec.normal);
-        let scattered = Ray::new(hit_rec.p, reflected);
+        let scattered = Ray::new(
+            hit_rec.p,
+            reflected + self.fuzziness * Vec3::random_unit_vector()
+        );
         let attenuation = self.albedo;
-        return Some((scattered, attenuation));
+        return if scattered.direction().dot(hit_rec.normal) > 0.0 {
+            Some((scattered, attenuation))
+        } else {
+            None
+        };
     }
 }
