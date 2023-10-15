@@ -49,3 +49,11 @@ fn test_surrounds() {
     assert_eq!(i.surrounds(0.5), true);
     assert_eq!(i.surrounds(1.1), false);
 }
+
+#[test]
+fn test_clamp() {
+    let i = Interval::new(0.0, 1.0);
+    assert_eq!(i.clamp(-1.0), 0.0);
+    assert_eq!(i.clamp(2.0), 1.0);
+    assert_eq!(i.clamp(0.5), 0.5);
+}
