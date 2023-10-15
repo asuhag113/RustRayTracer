@@ -76,3 +76,18 @@ fn test_add() {
     assert_eq!(c.y(), 2.0);
     assert_eq!(c.z(), 3.0);
 }
+
+impl ops::AddAssign<Color> for Color {
+    fn add_assign(&mut self, rhs: Color) {
+        self.0 += rhs.0;
+    }
+}
+#[test]
+fn test_add_assign() {
+    let mut a = Color::new(0.0, 1.0, 2.0);
+    let b = Color::new(1.0, 1.0, 1.0);
+    a += b;
+    assert_eq!(a.x(), 1.0);
+    assert_eq!(a.y(), 2.0);
+    assert_eq!(a.z(), 3.0);
+}
