@@ -1,4 +1,6 @@
 use std::ops;
+use rand::random;
+
 use crate::vec3::Vec3;
 
 #[derive(Clone, Copy)]
@@ -7,6 +9,12 @@ pub struct Color(Vec3);
 impl Color {
     pub fn new(x: f32, y: f32, z: f32) -> Self {
         Color(Vec3::new(x, y, z))
+    }
+    pub fn random() -> Color {
+        return Color(Vec3::new(random::<f32>(), random::<f32>(), random::<f32>()));
+    }
+    pub fn random_in_range(min: f32, max: f32) -> Color {
+        return Color(Vec3::random_in_range(min, max));
     }
     pub fn as_i32(&self) -> [i32; 3] {
         return [

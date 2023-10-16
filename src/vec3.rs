@@ -32,7 +32,7 @@ impl Vec3 {
     pub fn random() -> Vec3 {
         return Vec3::new(random::<f32>(), random::<f32>(), random::<f32>());
     }
-    fn random_in_range(min: f32, max: f32) -> Vec3 {
+    pub fn random_in_range(min: f32, max: f32) -> Vec3 {
         let mut rng = rand::thread_rng();
         return Vec3::new(rng.gen_range(min..max), rng.gen_range(min..max), rng.gen_range(min..max));
     }
