@@ -34,11 +34,13 @@ fn main() -> Result<(), Error> {
         400,
         100,
         50,
-        90.0,
+        20.0,
         Point3D::new(-2.0, 2.0, 1.0),
         Point3D::new(0.0, 0.0, -1.0),
         // camera-relative "up" direction, allowing for rotation
-        Vec3::new(0.0, 1.0, 0.0)
+        Vec3::new(0.0, 1.0, 0.0),
+        10.0,
+        3.4
     );
 
     camera.render(&world);
